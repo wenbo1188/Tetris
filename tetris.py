@@ -23,6 +23,7 @@ from pygame import Rect
 import pygame.mixer as Mixer
 import pygame.time as time
 import pygame.joystick as Gamepad
+import pickle
 
 WIDTH_PER_BLOCK = 30
 NEXT_BIG = 100
@@ -55,25 +56,37 @@ class Block(object):
         self.block_type = block_type
         self.content_all = []
         if (shape == Shape.I.value):
-            print("shape I")
+            # print("shape I")
             self.content_all = [
                 [
-                    [1, 0, 0, 0],
-                    [1, 0, 0, 0],
-                    [1, 0, 0, 0],
-                    [1, 0, 0, 0]
+                    [0, 1, 0, 0],
+                    [0, 1, 0, 0],
+                    [0, 1, 0, 0],
+                    [0, 1, 0, 0]
                 ],
                 [
+                    [0, 0, 0, 0],
                     [1, 1, 1, 1],
                     [0, 0, 0, 0],
+                    [0, 0, 0, 0]
+                ],
+                [
+                    [0, 0, 1, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 1, 0]
+                ],
+                [
                     [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1],
                     [0, 0, 0, 0]
                 ]
             ]
-            if (block_type > 1):
+            if (block_type > 3):
                 raise IndexError
         elif (shape == Shape.J.value):
-            print("shape J")
+            # print("shape J")
             self.content_all = [
                 [
                     [0, 1, 1, 0],
@@ -103,7 +116,7 @@ class Block(object):
             if (block_type > 3):
                 raise IndexError
         elif (shape == Shape.L.value):
-            print("shape L")
+            # print("shape L")
             self.content_all = [
                 [
                     [0, 1, 0, 0],
@@ -133,7 +146,7 @@ class Block(object):
             if (block_type > 3):
                 raise IndexError
         elif (shape == Shape.O.value):
-            print("shape O")
+            # print("shape O")
             self.content_all = [
                 [
                     [1, 1, 0, 0],
@@ -145,7 +158,7 @@ class Block(object):
             if (block_type > 0):   
                 raise IndexError
         elif (shape == Shape.S.value):
-            print("shape S")
+            # print("shape S")
             self.content_all = [
                 [
                     [1, 0, 0, 0],
@@ -175,7 +188,7 @@ class Block(object):
             if (block_type > 3):
                 raise IndexError
         elif (shape == Shape.Z.value):
-            print("shape Z")
+            # print("shape Z")
             self.content_all = [
                 [
                     [0, 1, 0, 0],
@@ -205,7 +218,7 @@ class Block(object):
             if (block_type > 3):
                 raise IndexError
         elif (shape == Shape.T.value):
-            print("shape T")
+            # print("shape T")
             self.content_all = [
                 [
                     [0, 1, 0, 0],
@@ -277,18 +290,8 @@ class Block(object):
         '''
         Do spin 90 degrees clockwise
         '''
-        if (self.shape == Shape.I.value):
-            block_type_to_be = (self.block_type + 1) % 2
-            if (self.check_transform(self.content, self.content_all[block_type_to_be], m)):
-                self.block_type = (self.block_type + 1) % 2
-                self.content = self.content_all[self.block_type]
-                if (self.block_type == 0):
-                    self.x += 1
-                    self.y -= 1
-                else:
-                    self.x -= 1
-                    self.y += 1
-        elif (self.shape == Shape.J.value or self.shape == Shape.L.value or  self.shape == Shape.T.value or self.shape == Shape.S.value or self.shape == Shape.Z.value):
+        
+        if (self.shape != Shape.O.value):
             block_type_to_be = (self.block_type + 1) % 4
             if (self.check_transform(self.content, self.content_all[block_type_to_be], m)):
                 self.block_type = (self.block_type + 1) % 4
@@ -322,18 +325,8 @@ class Block(object):
         '''
         Do spin 90 degrees counter-clockwise
         '''
-        if (self.shape == Shape.I.value):
-            block_type_to_be = (self.block_type - 1 + 2) % 2
-            if (self.check_transform(self.content, self.content_all[block_type_to_be], m)):
-                self.block_type = (self.block_type - 1 + 2) % 2
-                self.content = self.content_all[self.block_type]
-                if (self.block_type == 0):
-                    self.x += 1
-                    self.y -= 1
-                else:
-                    self.x -= 1
-                    self.y += 1
-        elif (self.shape == Shape.J.value or self.shape == Shape.L.value or  self.shape == Shape.T.value or self.shape == Shape.S.value or self.shape == Shape.Z.value):
+
+        if (self.shape != Shape.O.value):
             block_type_to_be = (self.block_type - 1 + 4) % 4
             if (self.check_transform(self.content, self.content_all[block_type_to_be], m)):
                 self.block_type = (self.block_type - 1 + 4) % 4
@@ -438,7 +431,7 @@ class Map(object):
         for pos in condidate:
             if ((block.y + pos[1] == 0) or 
                 self.get_map_position(block.x + pos[0], block.y + pos[1] - 1) == 1):
-                print("collision detect")
+                # print("collision detect")
                 # print(pos)
                 # print(block.x, block.y)
                 # print(block.x + pos[0], block.y + pos[1] - 1)
@@ -557,10 +550,10 @@ class Tetris(object):
                 pygame.draw.rect(self.screen, Color(255, 255, 255, 200), rect, 1)
 
     def draw_ui(self):
-        font = pygame.font.Font(None, 20)
+        font = pygame.font.SysFont('arial', 20)
         text = font.render("grade: {} level: {}".format(self.grade, self.level), True, Color(255, 255, 255))
         rect = text.get_rect()
-        rect.center = (60, 30)
+        rect.center = (80, 30)
         self.screen.blit(text, rect)
 
     def draw_background(self, background):
@@ -599,8 +592,21 @@ class Tetris(object):
                         rect = Rect(rects[k].left + xn + i * 10, rects[k].top + yn + j * 10, 10, 10)
                         pygame.draw.rect(next_area, next_six[k].color, rect)
 
+    def draw_hint(self, hint, block):
+        hint_block = copy.deepcopy(block)
+        while (not self.map.check_collision(hint_block)):
+            hint_block.downward()
+        
+        condidate = hint_block.get_condidate()
+        for pos in condidate:
+            x = hint_block.x + pos[0]
+            y = hint_block.y + pos[1]
+            if (x <= self.map.width - 1 and x >= 0 and y <= self.map.height - 1 and y >= 0):
+                rect = Rect(x * WIDTH_PER_BLOCK, (self.map.height - 1 - y) * WIDTH_PER_BLOCK, WIDTH_PER_BLOCK, WIDTH_PER_BLOCK)
+                pygame.draw.rect(hint, hint_block.color, rect)
+                pygame.draw.rect(hint, Color(255, 255, 255, 200), rect, 1)
 
-    def render(self, block, background, background_pic, next_area):
+    def render(self, block, hint, background, background_pic, next_area):
         tmp_map = Map(self.map.width, self.map.height)
         tmp_map.content = copy.deepcopy(self.map.content)
         condidate = block.get_condidate()
@@ -614,6 +620,7 @@ class Tetris(object):
         self.screen.blit(background_pic, (0, 0))
         background.fill((0, 0, 0))
         next_area.fill((0, 0, 0))
+        hint.fill((0, 0, 0))
         self.draw_background(background)
         self.draw_next(next_area)
         self.screen.blit(background, (0, 0))
@@ -621,6 +628,8 @@ class Tetris(object):
         self.draw_map(self.map)
         if self.has_block:
             self.draw_block(block)
+            self.draw_hint(hint, block)
+            self.screen.blit(hint, (0, 0))
         self.draw_ui()
         pygame.display.flip()
         pygame.display.update()
@@ -630,8 +639,10 @@ class Tetris(object):
 
     def generate_block(self, num):
         new_blocks = []
+        # new_blocks_shape = []
         for i in range(num):
             shape = random.randint(Shape.I.value, Shape.T.value)
+            # new_blocks_shape.append(shape)
             if shape == Shape.I.value:
                 x = 3
             elif shape == Shape.O.value:
@@ -641,6 +652,8 @@ class Tetris(object):
             y = 19
             block = Block(x, y, shape=shape, block_type=0)
             new_blocks.append(block)
+        # with open("blocks.pkl", 'wb') as f:
+        #     pickle.dump(new_blocks_shape, f, pickle.HIGHEST_PROTOCOL)
         self.block_queue.extend(new_blocks)
 
     def check_tspin_condition(self, block):
@@ -663,10 +676,10 @@ class Tetris(object):
                 if  block.x + pos[0] == self.map.width - 1 or self.map.content[block.x + pos[0] + 1][block.y + pos[1]] == 1:
                     right_move = False
                 if block.y + pos[1] == self.map.height - 1 or self.map.content[block.x + pos[0]][block.y + pos[1] + 1] == 1:
-                    print("can't move up: {}, {}".format(block.x + pos[0], block.y + pos[1]))
+                    # print("can't move up: {}, {}".format(block.x + pos[0], block.y + pos[1]))
                     up_move = False
         if not (left_move or right_move or up_move):
-            print("tspin condition true")
+            # print("tspin condition true")
             return True
         else:
             return False
@@ -770,6 +783,8 @@ def main():
     background_pic = pygame.image.load("background.jpg")
     background = pygame.Surface((300, 600))
     background.set_alpha(50)
+    hint = pygame.Surface((300, 600))
+    hint.set_alpha(40)
     next_area = pygame.Surface((1366, 768))
     pygame.display.set_caption("Tetris")
     game_map = Map()
@@ -782,9 +797,14 @@ def main():
     while not game.game_over:
         # generating blocks
         if (game.left_block_num() < 10):
-            game.generate_block(10)
+            game.generate_block(200)
         if not game.has_block:
             block = game.block_queue.pop(0)
+            condidates = block.get_condidate()
+            for pos in condidates:
+                if (block.x + pos[0] <= game.map.width - 1 and block.x + pos[0] >= 0 and block.y + pos[1] <= game.map.height - 1 and block.y + pos[1] >= 0):
+                    if (game.map.content[block.x + pos[0]][block.y + pos[1]] == 1):
+                        game.game_over = True
             game.has_block = True
             force_fresh = True
             pygame.key.set_repeat(200, 15) # enable repeat to cancel last repeating status
@@ -794,7 +814,7 @@ def main():
         time_per_line = pow((0.8 - ((game.level - 1) * 0.007)), (game.level - 1)) * 1000
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("quiting")
+                # print("quiting")
                 sys.exit()
             
             # keyboard control
@@ -802,11 +822,11 @@ def main():
                 if event.key == pygame.K_UP:
                     block.transform_clockwise(game.map)
                     game.music["rotate"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.key == pygame.K_z:
                     block.transform_counter_clockwise(game.map)
                     game.music["rotate"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.key == pygame.K_SPACE:
                     game.fastdownward(block)
                     game.music["harddrop"].play()
@@ -817,22 +837,22 @@ def main():
                 elif event.key == pygame.K_LEFT:
                     block.leftward(game.map)
                     game.music["move"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.key == pygame.K_RIGHT:
                     block.rightward(game.map)
                     game.music["move"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
 
             # gamepad control
             elif event.type == pygame.JOYBUTTONDOWN:
                 if event.button == 0: # A button
                     block.transform_clockwise(game.map)
                     game.music["rotate"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.button == 1: # B button
                     block.transform_counter_clockwise(game.map)
                     game.music["rotate"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.button == 2: # X button
                     game.fastdownward(block)
                     game.music["harddrop"].play()
@@ -842,21 +862,20 @@ def main():
                 if event.value == (-1, 0): # left
                     block.leftward(game.map)
                     game.music["move"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.value == (1, 0): # right
                     block.rightward(game.map)
                     game.music["move"].play()
-                    game.render(block, background, background_pic, next_area)
+                    game.render(block, hint, background, background_pic, next_area)
                 elif event.value == (0, -1): # down
                     game.music["move"].play()
                     force_fresh = True
         
         if (force_fresh or time.get_ticks() % (int)(time_per_line) == 0):
             game.update(block)
-            game.render(block, background, background_pic, next_area)
+            game.render(block, hint, background, background_pic, next_area)
             force_fresh = False
-        # time.sleep(1.0 / game.level)
-    print(game.grade)
+    # print(game.grade)
 
 if __name__ == '__main__':
     main()
